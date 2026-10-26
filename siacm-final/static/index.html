@@ -1,0 +1,79 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SIACM · Apoio à Classificação de Tumores Mamários</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4efe6;--card:#fbf8f2;--ink:#1d2b2a;--mut:#6b7774;--line:#ddd5c5;--low:#2f7d6d;--mid:#c8871b;--high:#b3392f;--unk:#5b5f8a;
+--serif:'Fraunces',Georgia,serif;--sans:'IBM Plex Sans',system-ui,sans-serif}
+@media(prefers-color-scheme:dark){:root{--bg:#141b1a;--card:#1c2625;--ink:#ece6d8;--mut:#9aa6a2;--line:#33403e;--low:#58b9a5;--mid:#e0a43c;--high:#e5705f;--unk:#9a9fd6}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+.wrap{max-width:1180px;margin:auto;padding:28px 20px 60px}
+h1{font:700 clamp(26px,4vw,40px)/1.1 var(--serif);margin:0 0 6px;letter-spacing:-.02em}
+.sub{color:var(--mut);margin:0 0 24px;max-width:70ch}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:20px}@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+h2{font:600 18px var(--serif);margin:0 0 12px}
+.ex{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+button{font:500 14px var(--sans);border:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 12px;border-radius:8px;cursor:pointer}
+button:hover{border-color:var(--ink)}button.go{background:var(--ink);color:var(--bg);width:100%;padding:13px;font-size:16px;margin-top:14px}
+details{border-top:1px solid var(--line);padding:8px 0}summary{cursor:pointer;font-weight:600;padding:4px 0}
+.fs{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:8px}.fs label{font-size:12px;color:var(--mut);display:block}
+input{width:100%;padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:14px var(--sans)}
+.lab{margin-bottom:10px}
+.res{min-height:300px}.empty{color:var(--mut);padding:40px 0;text-align:center}
+.cls{font:700 28px/1.15 var(--serif);margin:4px 0}.pill{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;color:#fff;margin-right:6px}
+.meter{position:relative;height:18px;border-radius:9px;margin:34px 0 6px;background:linear-gradient(90deg,var(--low) 0 30%,var(--mid) 30% 70%,var(--high) 70%);opacity:.85}
+.mk{position:absolute;top:-8px;width:3px;height:34px;background:var(--ink);transition:left .6s}.mk b{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:13px;white-space:nowrap}
+.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--mut)}
+.bar{display:grid;grid-template-columns:150px 1fr 50px;gap:8px;align-items:center;font-size:13px;margin:6px 0}
+.bar i{display:block;height:10px;border-radius:5px;background:var(--high)}.bar i.neg{background:var(--low)}.bar span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.warn{border-left:4px solid var(--unk);background:color-mix(in srgb,var(--unk) 12%,transparent);padding:10px 12px;border-radius:6px;margin:12px 0;font-size:14px}
+.ai{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:12px 0;font-size:14px}.aih{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-bottom:6px}.disc{font-size:12px;color:var(--mut);margin-top:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--mut);font-weight:500}
+.full{grid-column:1/-1}.err{color:var(--high);margin-top:8px}
+</style></head><body><div class="wrap">
+<h1>Sistema Inteligente de Apoio à Classificação de Tumores Mamários</h1>
+<p class="sub">Machine Learning (Regressão Logística, Árvore de Decisão, Random Forest) + motor de decisão por regras + IA generativa que explica, em linguagem natural, resultados já calculados. Protótipo acadêmico, baseado no dataset Wisconsin Breast Cancer.</p>
+<div class="grid">
+ <section class="card"><h2>Dados do exame</h2>
+  <div class="ex" id="ex"></div>
+  <div class="lab"><label style="font-size:12px;color:var(--mut)">Identificação (opcional)</label><input id="label" placeholder="Ex.: Exame 001"></div>
+  <div id="form"></div><button class="go" id="go">Analisar</button><div class="err" id="err"></div></section>
+ <section class="card res" id="res"><div class="empty">Carregue um exemplo ou preencha os dados e clique em <b>Analisar</b>.</div></section>
+ <section class="card"><h2>Histórico de análises</h2><table id="hist"></table></section>
+ <section class="card"><h2>Desempenho no teste · classe positiva = maligno</h2><table id="met"></table></section>
+</div></div>
+<script>
+const PT={radius:'Raio',texture:'Textura',perimeter:'Perímetro',area:'Área',smoothness:'Suavidade',compactness:'Compacidade',concavity:'Concavidade','concave points':'Pontos côncavos',symmetry:'Simetria','fractal dimension':'Dimensão fractal'};
+const GR={mean:'Valores médios',error:'Erro padrão',worst:'Piores valores'};
+const pt=f=>{const m=f.match(/^(mean|worst)? ?(.*?)( error)?$/);const g=m[1]||'error';const b=PT[m[2]]||m[2];return b+(g==='worst'?' (pior)':g==='mean'?' (média)':' (erro)')};
+const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id),pct=x=>(x*100).toFixed(1)+'%';let S;
+const col={Baixo:'--low','Intermediário':'--mid',Alto:'--high'};
+async function init(){S=await (await fetch('/api/schema')).json();
+ const g={mean:[],error:[],worst:[]};S.features.forEach(f=>g[f.startsWith('mean')?'mean':f.startsWith('worst')?'worst':'error'].push(f));
+ $('form').innerHTML=Object.entries(g).map(([k,fs],i)=>`<details ${i?'':'open'}><summary>${GR[k]}</summary><div class="fs">${fs.map(f=>`<div><label>${pt(f)}</label><input data-f="${f}" type="number" step="any" value="${S.stats[f].mean.toFixed(4)}"></div>`).join('')}</div></details>`).join('');
+ $('ex').innerHTML=Object.keys(S.examples).map(k=>`<button onclick="load('${k}')">${k}</button>`).join('')+'<button onclick="load(null)">Valores médios</button>';
+ hist();met()}
+function load(k){document.querySelectorAll('[data-f]').forEach(i=>i.value=k?S.examples[k][i.dataset.f].toFixed(4):S.stats[i.dataset.f].mean.toFixed(4));$('label').value=k||'';}
+$('go').onclick=async()=>{$('err').textContent='';const d={_label:$('label').value};document.querySelectorAll('[data-f]').forEach(i=>d[i.dataset.f]=i.value);
+ const r=await fetch('/api/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});const j=await r.json();
+ if(!r.ok){$('err').textContent=j.erro;return}show(j);hist()};
+function show(r){const unk=r.classificacao.includes('inconclusivo'),c=unk?'--unk':col[r.nivel_risco];
+ $('res').innerHTML=`<h2>Resultado</h2><span class="pill" style="background:var(${c})">Risco ${esc(r.nivel_risco)}</span><span class="pill" style="background:var(--mut)">Confiança heurística ${r.confianca}</span>
+ <div class="cls" style="color:var(${c})">${esc(r.classificacao)}</div>
+ <div class="meter"><div class="mk" style="left:${r.prob_maligno*100}%"><b>${pct(r.prob_maligno)} estimativa do modelo principal</b></div></div>
+ <div class="scale"><span>0% · baixo</span><span>30%</span><span>70%</span><span>alto · 100%</span></div>
+ ${r.motivos.length?`<div class="warn"><b>O sistema não tem confiança suficiente.</b> Motivos: ${r.motivos.map(esc).join('; ')}.</div>`:''}
+ <p><b>Recomendação:</b> ${esc(r.recomendacao)}</p>
+ <div class="ai"><div class="aih">Explicação em linguagem natural · <i>${esc(r.explicacao_ia.fonte)}</i></div>${esc(r.explicacao_ia.texto)}</div>
+ <h2 style="margin-top:18px">Principais fatores (${esc(r.modelo_principal)})</h2>
+ ${r.explicacao.map(e=>`<div class="bar"><span title="${e.feature}">${pt(e.feature)}</span><i class="${e.contribuicao<0?'neg':''}" style="width:${Math.max(4,e.peso*100*2.2)}%"></i><span>${e.contribuicao<0?'−':'+'}${(e.peso*100).toFixed(0)}%</span></div>`).join('')}
+ <div style="font-size:12px;color:var(--mut)">Barras: participação relativa de cada atributo na variação do log-odds de malignidade do modelo principal ao neutralizá-lo (valor médio do desenvolvimento). Vermelho aumenta · verde reduz. São contribuições matemáticas, não causas médicas.</div>
+ <h2 style="margin-top:18px">Estimativa de malignidade por modelo</h2>
+ ${Object.entries(r.por_modelo).map(([n,p])=>`<div class="bar"><span>${n}</span><i style="width:${p*100}%;background:var(--unk)"></i><span>${pct(p)}</span></div>`).join('')}
+ <p class="disc">⚠ ${r.aviso} A estimativa exibida é do modelo principal (${esc(r.modelo_principal)}), não calibrada e não validada como risco clínico. A média dos três modelos, usada apenas como comparação, é ${(r.ensemble_prob_maligno*100).toFixed(1)}%. Limiares (30% / 70%) e regras de inconclusão são definições do protótipo.</p>`}
+async function hist(){const h=await (await fetch('/api/history')).json();$('hist').innerHTML='<tr><th>Hora</th><th>Exame</th><th>Estim. maligno</th><th>Risco</th><th>Resultado</th></tr>'+(h.map(x=>`<tr><td>${x.ts}</td><td>${esc(x.label)}</td><td>${pct(x.p)}</td><td>${esc(x.risk)}</td><td>${esc(x.cls)}</td></tr>`).join('')||'<tr><td colspan=5 style="color:var(--mut)">Nenhuma análise ainda.</td></tr>')}
+async function met(){const m=await (await fetch('/api/metrics')).json();$('met').innerHTML='<tr><th>Modelo</th><th>Acurácia</th><th>Precisão (mal.)</th><th>Recall (mal.)</th><th>F1 (mal.)</th><th>AUC</th></tr>'+Object.entries(m).map(([n,v])=>`<tr><td>${n}</td><td>${v.acuracia.toFixed(3)}</td><td>${v.precisao_maligno.toFixed(3)}</td><td>${v.recall_maligno.toFixed(3)}</td><td>${v.f1_maligno.toFixed(3)}</td><td>${v.auc.toFixed(3)}</td></tr>`).join('')}
+init();
+</script></body></html>
